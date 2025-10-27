@@ -1,0 +1,599 @@
+---
+title: "Project1_FinalDraft"
+author: "Koosha"
+date: "2025-10-26"
+output: html_document
+---
+#Link to Youtube Video
+#https://www.youtube.com/watch?v=fSLM-jSjJrs
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Load necessary library
+
+library(readr)
+# Define the URL
+url <- "https://raw.githubusercontent.com/BivinSadler/MSDS_6306_Doing-Data-Science/refs/heads/Master/Unit%208%20and%209%20Case%20Study%201/CaseStudy1-data.csv"
+
+# Read the CSV file
+data <- read_csv(url)
+
+# View the first few rows
+head(data)
+
+# Check the structure of the dataset
+str(data)
+
+# Summary statistics
+summary(data)
+
+```
+
+```{r}
+# Load necessary library
+library(tidyverse)
+
+# Read the data
+url <- "https://raw.githubusercontent.com/BivinSadler/MSDS_6306_Doing-Data-Science/refs/heads/Master/Unit%208%20and%209%20Case%20Study%201/CaseStudy1-data.csv"
+data <- read_csv(url)
+
+# Identify non-numeric columns
+non_numeric_cols <- data %>% select(where(~ !is.numeric(.))) %>% names()
+
+# Display unique values for each non-numeric column
+for (col in non_numeric_cols) {
+  cat("\n", col, ":\n")
+  print(unique(data[[col]]))
+}
+```
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+
+# Read the data
+url <- "https://raw.githubusercontent.com/BivinSadler/MSDS_6306_Doing-Data-Science/refs/heads/Master/Unit%208%20and%209%20Case%20Study%201/CaseStudy1-data.csv"
+data <- read_csv(url)
+
+# Create a bar plot of Attrition by BusinessTravel
+ggplot(data, aes(x = BusinessTravel, fill = Attrition)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Attrition by Business Travel Category",
+       x = "Business Travel Category",
+       y = "Number of Employees",
+       fill = "Attrition Status") +
+  theme_minimal()
+```
+
+```{r}
+library(tidyverse)
+
+# Create bins (low/high) for Age and YearsWithCompany based on median
+data <- data %>%
+  mutate(
+    AgeGroup = ifelse(Age <= median(Age, na.rm = TRUE), "Low Age", "High Age"),
+    TenureGroup = ifelse(YearsAtCompany <= median(YearsAtCompany, na.rm = TRUE), 
+                         "Low Tenure", "High Tenure")
+  )
+
+# Calculate attrition proportion for each group combination
+attrition_summary <- data %>%
+  group_by(AgeGroup, TenureGroup) %>%
+  summarise(
+    Total = n(),
+    AttritionYes = sum(Attrition == "Yes"),
+    AttritionRate = round(100 * AttritionYes / Total, 1)
+  )
+
+print(attrition_summary)
+
+# Plot the proportion of attrition
+ggplot(attrition_summary, aes(x = AgeGroup, y = AttritionRate, fill = TenureGroup)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.6) +
+  geom_text(aes(label = paste0(AttritionRate, "%")), 
+            position = position_dodge(width = 0.7), vjust = -0.2, size = 4.2) +
+  scale_fill_manual(values = c("#A50021", "#e8e8e8")) +
+  labs(title = "Attrition Rate by Age and Tenure Groups",
+       x = "Age Group", y = "Attrition Rate (%)", fill = "Tenure Group") +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(color = "#A50021", face = "bold", hjust = 0.5),
+    legend.position = "top"
+  )
+
+```
+
+```{r}
+library(tidyverse)
+
+# Create bins (Low / High) for Age and MonthlyIncome using median split
+data <- data %>%
+  mutate(
+    AgeGroup = ifelse(Age <= median(Age, na.rm = TRUE), "Low Age", "High Age"),
+    IncomeGroup = ifelse(MonthlyIncome <= median(MonthlyIncome, na.rm = TRUE), 
+                         "Low Income", "High Income")
+  )
+
+# Calculate attrition proportion for each Age–Income combination
+attrition_summary_income <- data %>%
+  group_by(AgeGroup, IncomeGroup) %>%
+  summarise(
+    Total = n(),
+    AttritionYes = sum(Attrition == "Yes"),
+    AttritionRate = round(100 * AttritionYes / Total, 1)
+  )
+
+print(attrition_summary_income)
+
+# Create bar plot
+ggplot(attrition_summary_income, aes(x = AgeGroup, y = AttritionRate, fill = IncomeGroup)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.6) +
+  geom_text(aes(label = paste0(AttritionRate, "%")),
+            position = position_dodge(width = 0.7), vjust = -0.2, size = 4.2) +
+  scale_fill_manual(values = c("#A50021", "#e8e8e8")) +
+  labs(title = "Attrition Rate by Age and Income Groups",
+       x = "Age Group", y = "Attrition Rate (%)", fill = "Income Group") +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(color = "#A50021", face = "bold", hjust = 0.5),
+    legend.position = "top"
+  )
+
+```
+
+```{r}
+library(tidyverse)
+
+# Calculate attrition rate by JobInvolvement level
+attrition_jobinv <- data %>%
+  group_by(JobInvolvement) %>%
+  summarise(
+    Total = n(),
+    AttritionYes = sum(Attrition == "Yes"),
+    AttritionRate = round(100 * AttritionYes / Total, 1)
+  )
+
+print(attrition_jobinv)
+
+# Plot attrition rate by JobInvolvement
+ggplot(attrition_jobinv, aes(x = factor(JobInvolvement), y = AttritionRate, fill = factor(JobInvolvement))) +
+  geom_bar(stat = "identity", width = 0.6, color = "black") +
+  geom_text(aes(label = paste0(AttritionRate, "%")), vjust = -0.3, size = 4.2) +
+  scale_fill_manual(values = c("#A50021", "#c94c66", "#e8e8e8", "#9a9a9a")) +
+  labs(
+    title = "Attrition Rate by Job Involvement Level",
+    x = "Job Involvement (1 = Low, 4 = Very High)",
+    y = "Attrition Rate (%)",
+    fill = "Job Involvement Level"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(color = "#A50021", face = "bold", hjust = 0.5),
+    legend.position = "none"
+  )
+
+```
+
+```{r}
+library(tidyverse)
+
+# Calculate attrition rate by JobLevel
+attrition_joblevel <- data %>%
+  group_by(JobLevel) %>%
+  summarise(
+    Total = n(),
+    AttritionYes = sum(Attrition == "Yes"),
+    AttritionRate = round(100 * AttritionYes / Total, 1)
+  )
+
+print(attrition_joblevel)
+
+# Plot attrition rate by Job Level
+ggplot(attrition_joblevel, aes(x = factor(JobLevel), y = AttritionRate, fill = factor(JobLevel))) +
+  geom_bar(stat = "identity", width = 0.6, color = "black") +
+  geom_text(aes(label = paste0(AttritionRate, "%")), vjust = -0.3, size = 4.2) +
+  scale_fill_manual(values = c("#A50021", "#c94c66", "#e8e8e8", "#bdbdbd", "#9a9a9a")) +
+  labs(
+    title = "Attrition Rate by Job Level",
+    x = "Job Level (1 = Entry, 5 = Executive)",
+    y = "Attrition Rate (%)",
+    fill = "Job Level"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(color = "#A50021", face = "bold", hjust = 0.5),
+    legend.position = "none"
+  )
+
+```
+
+```{r}
+library(tidyverse)
+
+# Create distance bins (using quantiles or custom cut points)
+data <- data %>%
+  mutate(DistanceGroup = case_when(
+    DistanceFromHome <= 5  ~ "Short (≤5 km)",
+    DistanceFromHome <= 10 ~ "Medium (6–10 km)",
+    TRUE                   ~ "Long (>10 km)"
+  ))
+
+# Calculate attrition rate by distance group
+attrition_distance <- data %>%
+  group_by(DistanceGroup) %>%
+  summarise(
+    Total = n(),
+    AttritionYes = sum(Attrition == "Yes"),
+    AttritionRate = round(100 * AttritionYes / Total, 1)
+  )
+
+print(attrition_distance)
+
+# Plot attrition rate by distance group
+ggplot(attrition_distance, aes(x = DistanceGroup, y = AttritionRate, fill = DistanceGroup)) +
+  geom_bar(stat = "identity", width = 0.6, color = "black") +
+  geom_text(aes(label = paste0(AttritionRate, "%")), vjust = -0.3, size = 4.2) +
+  scale_fill_manual(values = c("#A50021", "#c94c66", "#e8e8e8")) +
+  labs(
+    title = "Attrition Rate by Distance from Home",
+    x = "Distance from Home (km)",
+    y = "Attrition Rate (%)",
+    fill = "Distance Group"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(color = "#A50021", face = "bold", hjust = 0.5),
+    legend.position = "none"
+  )
+
+```
+
+```{r}
+library(tidyverse)
+
+# Create two groups based on number of companies worked
+data <- data %>%
+  mutate(CompanyGroup = ifelse(NumCompaniesWorked < 5, "< 5 Companies", "≥ 5 Companies"))
+
+# Calculate attrition rate for each group
+attrition_company_group <- data %>%
+  group_by(CompanyGroup) %>%
+  summarise(
+    Total = n(),
+    AttritionYes = sum(Attrition == "Yes"),
+    AttritionRate = round(100 * AttritionYes / Total, 1)
+  )
+
+print(attrition_company_group)
+
+# ---- Plot ----
+ggplot(attrition_company_group, aes(x = CompanyGroup, y = AttritionRate, fill = CompanyGroup)) +
+  geom_bar(stat = "identity", width = 0.6, color = "black") +
+  geom_text(aes(label = paste0(AttritionRate, "%")), vjust = -0.3, size = 4.2) +
+  scale_fill_manual(values = c("#A50021", "#e8e8e8")) +
+  labs(
+    title = "Attrition Rate by Number of Companies Worked",
+    x = "Number of Companies Worked",
+    y = "Attrition Rate (%)",
+    fill = "Group"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(color = "#A50021", face = "bold", hjust = 0.5),
+    legend.position = "none"
+  )
+
+```
+
+```{r}
+library(tidyverse)
+
+# Calculate attrition rate by WorkLifeBalance
+attrition_wlb <- data %>%
+  group_by(WorkLifeBalance) %>%
+  summarise(
+    Total = n(),
+    AttritionYes = sum(Attrition == "Yes"),
+    AttritionRate = round(100 * AttritionYes / Total, 1)
+  )
+
+print(attrition_wlb)
+
+# Plot attrition rate by Work–Life Balance
+ggplot(attrition_wlb, aes(x = factor(WorkLifeBalance), y = AttritionRate, fill = factor(WorkLifeBalance))) +
+  geom_bar(stat = "identity", width = 0.6, color = "black") +
+  geom_text(aes(label = paste0(AttritionRate, "%")), vjust = -0.3, size = 4.2) +
+  scale_fill_manual(values = c("#A50021", "#c94c66", "#e8e8e8", "#9a9a9a")) +
+  labs(
+    title = "Attrition Rate by Work–Life Balance",
+    x = "Work–Life Balance (1 = Poor, 4 = Excellent)",
+    y = "Attrition Rate (%)",
+    fill = "Work–Life Balance"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(color = "#A50021", face = "bold", hjust = 0.5),
+    legend.position = "none"
+  )
+
+```
+
+```{r}
+library(tidyverse)
+
+# Calculate attrition rate by StockOptionLevel
+attrition_stock <- data %>%
+  group_by(StockOptionLevel) %>%
+  summarise(
+    Total = n(),
+    AttritionYes = sum(Attrition == "Yes"),
+    AttritionRate = round(100 * AttritionYes / Total, 1)
+  )
+
+print(attrition_stock)
+
+# Plot attrition rate by Stock Option Level
+ggplot(attrition_stock, aes(x = factor(StockOptionLevel), y = AttritionRate, fill = factor(StockOptionLevel))) +
+  geom_bar(stat = "identity", width = 0.6, color = "black") +
+  geom_text(aes(label = paste0(AttritionRate, "%")), vjust = -0.3, size = 4.2) +
+  scale_fill_manual(values = c("#A50021", "#c94c66", "#e8e8e8", "#9a9a9a")) +
+  labs(
+    title = "Attrition Rate by Stock Option Level",
+    x = "Stock Option Level (0 = None, 3 = Highest)",
+    y = "Attrition Rate (%)",
+    fill = "Stock Option Level"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(color = "#A50021", face = "bold", hjust = 0.5),
+    legend.position = "none"
+  )
+
+```
+
+```{r}
+
+# NAIVE BAYES MODEL
+# ==========================================================
+# 1️⃣ Load Required Libraries
+# ==========================================================
+required_packages <- c("tidyverse", "caret", "smotefamily", "e1071")
+for (pkg in required_packages) {
+  if (!requireNamespace(pkg, quietly = TRUE))
+    install.packages(pkg, dependencies = TRUE)
+  library(pkg, character.only = TRUE)
+}
+
+# ==========================================================
+# 2️⃣ Prepare Dataset
+# ==========================================================
+data$AttritionFlag <- factor(ifelse(data$Attrition == "Yes", "Yes", "No"),
+                             levels = c("No", "Yes"))  # "No" = stayed (positive)
+
+selected_features <- c(
+  "JobInvolvement", "TotalWorkingYears", "JobLevel",
+  "YearsInCurrentRole", "MonthlyIncome", "Age",
+  "StockOptionLevel", "YearsWithCurrManager",
+  "YearsAtCompany", "JobSatisfaction"
+)
+
+model_data <- data %>% select(all_of(selected_features), AttritionFlag)
+
+# ==========================================================
+# 3️⃣ Split Data (70% Train, 30% Test)
+# ==========================================================
+set.seed(11)
+train_index <- createDataPartition(model_data$AttritionFlag, p = 0.7, list = FALSE)
+train_data <- model_data[train_index, ]
+test_data  <- model_data[-train_index, ]
+
+cat("\nClass distribution in Training Set:\n")
+print(table(train_data$AttritionFlag))
+cat("\nClass distribution in Test Set:\n")
+print(table(test_data$AttritionFlag))
+
+# ==========================================================
+# 4️⃣ Cross-Validation Setup (Repeated CV with SMOTE)
+# ==========================================================
+train_ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 3,
+  sampling = "smote",          # SMOTE applied inside each fold
+  classProbs = TRUE,
+  savePredictions = "final",
+  summaryFunction = twoClassSummary
+)
+
+# ==========================================================
+# 5️⃣ Train Naive Bayes Model (No Scaling)
+# ==========================================================
+set.seed(11)
+nb_model_cv <- train(
+  AttritionFlag ~ .,
+  data = train_data,
+  method = "naive_bayes",
+  trControl = train_ctrl,
+  metric = "ROC"
+)
+
+print(nb_model_cv)
+
+# ==========================================================
+# 6️⃣ Summarize Cross-Validation Results
+# ==========================================================
+cv_results <- nb_model_cv$resample %>%
+  summarise(
+    AUC = mean(ROC, na.rm = TRUE) * 100,
+    Sensitivity = mean(Sens, na.rm = TRUE) * 100,
+    Specificity = mean(Spec, na.rm = TRUE) * 100
+  ) %>%
+  round(2)
+
+cat("\n🔹 Cross-Validation Summary (Training Set):\n")
+print(cv_results)
+
+# ==========================================================
+# 7️⃣ Evaluate Model on Test Data
+# ==========================================================
+final_preds <- predict(nb_model_cv, newdata = test_data)
+
+cm <- confusionMatrix(final_preds, test_data$AttritionFlag, positive = "No")
+cat("\n\n🏁 Final Test Set Evaluation:\n")
+print(cm)
+```
+
+```{r}
+
+#KNN MODEL
+# ==========================================================
+# 1️⃣ Load Required Libraries
+# ==========================================================
+required_packages <- c("tidyverse", "caret", "smotefamily", "class")
+for (pkg in required_packages) {
+  if (!requireNamespace(pkg, quietly = TRUE))
+    install.packages(pkg, dependencies = TRUE)
+  library(pkg, character.only = TRUE)
+}
+
+# ==========================================================
+# 2️⃣ Prepare Dataset
+# ==========================================================
+data$AttritionFlag <- factor(ifelse(data$Attrition == "Yes", "Yes", "No"),
+                             levels = c("No", "Yes"))  # "No" = stayed (positive)
+
+selected_features <- c(
+  "JobInvolvement", "TotalWorkingYears", "JobLevel",
+  "YearsInCurrentRole", "MonthlyIncome", "Age",
+  "StockOptionLevel", "YearsWithCurrManager",
+  "YearsAtCompany", "JobSatisfaction"
+)
+
+model_data <- data %>% select(all_of(selected_features), AttritionFlag)
+
+# ==========================================================
+# 3️⃣ Split Data (70% Train, 30% Test)
+# ==========================================================
+set.seed(11)
+train_index <- createDataPartition(model_data$AttritionFlag, p = 0.7, list = FALSE)
+train_data <- model_data[train_index, ]
+test_data  <- model_data[-train_index, ]
+
+cat("\nClass distribution in Training Set:\n")
+print(table(train_data$AttritionFlag))
+cat("\nClass distribution in Test Set:\n")
+print(table(test_data$AttritionFlag))
+
+# ==========================================================
+# 4️⃣ Cross-Validation Setup (on Training Data only)
+# ==========================================================
+train_ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 3,
+  sampling = "smote",          # SMOTE applied inside each fold
+  classProbs = TRUE,
+  savePredictions = "final",
+  summaryFunction = twoClassSummary
+)
+
+# ==========================================================
+# 5️⃣ Tune k Values
+# ==========================================================
+tune_grid <- expand.grid(k = seq(3,15, 2))  # odd k to avoid ties
+
+# ==========================================================
+# 6️⃣ Train kNN with 10-Fold Cross Validation
+# ==========================================================
+set.seed(11)
+knn_model_cv <- train(
+  AttritionFlag ~ .,
+  data = train_data,
+  method = "knn",
+  trControl = train_ctrl,
+  preProcess = c("center", "scale"),
+  tuneGrid = tune_grid,
+  metric = "ROC"
+)
+
+print(knn_model_cv)
+best_k <- knn_model_cv$bestTune$k
+cat("\n🏆 Best k found via cross-validation:", best_k, "\n")
+
+# ==========================================================
+# 7️⃣ Summarize Cross-Validation Results
+# ==========================================================
+cv_results <- knn_model_cv$resample %>%
+  summarise(
+    AUC = mean(ROC, na.rm = TRUE) * 100,
+    Sensitivity = mean(Sens, na.rm = TRUE) * 100,
+    Specificity = mean(Spec, na.rm = TRUE) * 100
+  ) %>%
+  round(2)
+
+cat("\n🔹 Cross-Validation Summary (Training Set):\n")
+print(cv_results)
+
+
+
+# ==========================================================
+# 8️⃣ Evaluate Best Model on Test Data
+# ==========================================================
+
+# Predict using trained caret model (includes preprocessing)
+final_preds <- predict(knn_model_cv, newdata = test_data)
+
+# Evaluate performance (treating "No" = stayed as the positive class)
+cm <- confusionMatrix(final_preds, test_data$AttritionFlag, positive = "No")
+
+cat("\n\n🏁 Final Test Set Evaluation (k =", best_k, "):\n")
+print(cm)
+
+
+
+```
+
+
+```{r}
+#Load necessary library
+
+library(readr)
+# Define the URL
+url <- "https://raw.githubusercontent.com/BivinSadler/MSDS_6306_Doing-Data-Science/refs/heads/Master/Unit%208%20and%209%20Case%20Study%201/CaseStudy1CompSet%20No%20Attrition.csv"
+
+# Read the CSV file
+data2 <- read_csv(url)
+
+# View the first few rows
+head(data2)
+
+selected_features <- c(
+  "JobInvolvement", "TotalWorkingYears", "JobLevel",
+  "YearsInCurrentRole", "MonthlyIncome", "Age",
+  "StockOptionLevel", "YearsWithCurrManager",
+  "YearsAtCompany", "JobSatisfaction"
+)
+
+Competition_Data <- data2 %>% select(all_of(selected_features))
+head(Competition_Data)
+dim(Competition_Data)
+
+# Predict using trained caret model (includes preprocessing)
+knn_preds <- predict(knn_model_cv, newdata =Competition_Data )
+nb_preds <- predict(nb_model_cv, newdata =Competition_Data )
+```
+```{r}
+# Create new dataframe with ID and predicted Attrition
+final_predictions <- data.frame(
+  ID = data2$ID,
+  Attrition = nb_preds
+)
+
+# Save to CSV
+write.csv(final_predictions, "Case1PredictionsTABESH Attrition.csv", row.names = FALSE)
+``
+```
+
+
