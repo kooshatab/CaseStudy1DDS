@@ -4,8 +4,7 @@ author: "Koosha"
 date: "2025-10-26"
 output: html_document
 ---
-#Link to Youtube Video
-#https://www.youtube.com/watch?v=fSLM-jSjJrs
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -595,5 +594,6 @@ final_predictions <- data.frame(
 write.csv(final_predictions, "Case1PredictionsTABESH Attrition.csv", row.names = FALSE)
 ``
 ```
+
 
 
